@@ -25,7 +25,10 @@ open(FI,$splignFile) or die "Can not open file '$splignFile' due to:$!\n";
       my @fields = split(/\s+/, $txt); 
       if ($mRNA ne $fields[1]) {
         if (scalar(@matchs) > 0) {
-          print $mRNA, "\t", getBestMatch(\@matchs), "\n";
+          my $id = getBestMatch(\@matchs);
+          print join("\t",($mRNA,@$id)),"\n";
+          my $bestMatch = getMatchById(\@matchs, $id->[0]);
+          print join("\n",map {join("\t",@$_)} @$bestMatch),"\n";
         } 
         @matchs = ();
         $mRNA = $fields[1];
@@ -36,6 +39,7 @@ open(FI,$splignFile) or die "Can not open file '$splignFile' due to:$!\n";
 
 close(FI);
 
+# return [id, numOfGaps, identity, numOfExon]
 sub getBestMatch {
   my $matchs = shift;
   
@@ -70,5 +74,11 @@ sub getBestMatch {
       ;
     }
   }
-  return(("bestKey:$bestKey","\tgaps:",$gaps{$bestKey},"\tidentity:", $identity{$bestKey}, "\texons:", $numOfExons{$bestKey}));
+  return([$bestKey,$gaps{$bestKey},$identity{$bestKey}, $numOfExons{$bestKey}]);
+}
+
+sub getMatchById {
+  my $matchs = shift;
+  my $id = shift;
+  return([grep { $_->[0] eq $id } @$matchs]);
 }
