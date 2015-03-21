@@ -26,7 +26,7 @@ open(FI,$splignFile) or die "Can not open file '$splignFile' due to:$!\n";
       if ($mRNA ne $fields[1]) {
         if (scalar(@matchs) > 0) {
           my $id = getBestMatch(\@matchs);
-          print join("\t",($mRNA,@$id)),"\n";
+          # print join("\t",($mRNA,@$id)),"\n";
           my $bestMatch = getMatchById(\@matchs, $id->[0]);
           print join("\n",map {join("\t",@$_)} @$bestMatch),"\n";
         } 
@@ -40,6 +40,8 @@ open(FI,$splignFile) or die "Can not open file '$splignFile' due to:$!\n";
 close(FI);
 
 # return [id, numOfGaps, identity, numOfExon]
+# there are should some other methods to determine the best match region:
+#   the real identity, the average identity weighted by match length
 sub getBestMatch {
   my $matchs = shift;
   
