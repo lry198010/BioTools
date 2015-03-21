@@ -84,3 +84,15 @@ sub getMatchById {
   my $id = shift;
   return([grep { $_->[0] eq $id } @$matchs]);
 }
+
+# +1	lcl|mRNA_1	lcl|Ntab-K326_AWOJ-SS1	1	418	1	418	139948	140365	<exon>GT	M418
+# +1	lcl|mRNA_1	lcl|Ntab-K326_AWOJ-SS1	1	328	419	746	141694	142021	AG<exon>	M328
+# GFF3
+# Ntab-K326_AWOJ-SS1	splign	gene	start	end identity	
+sub splign2gff {
+  my $ids = shift;
+  my $matchs = shift;
+  
+  my   
+  
+}
