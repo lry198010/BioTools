@@ -93,6 +93,6 @@ sub splign2gff {
   my $ids = shift;
   my $matchs = shift;
   
-  my   
+  my $t = 0;  
   
 }
