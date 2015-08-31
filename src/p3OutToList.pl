@@ -34,4 +34,4 @@ open(IN,$p3Out) or die "Cann't open primer3 out file '$p3Out' due to:$!\n";
   }
 close(IN);
 
- print join("\n",@result);
+print join("\n",@result);

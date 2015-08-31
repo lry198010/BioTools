@@ -4,6 +4,10 @@ use Data::Dumper;
 
 my $fasta = shift;
 my $misa = shift;
+# misa the position was start at 1, with the 1st base having position 1
+# vcf the position of the ref was at 1, with the 1st base having position 1 
+
+my $usage = "Usage: perl $0 fasta_file misa_file\n";
 
 my %SSR = getMisa($misa);
 
@@ -16,7 +20,7 @@ my %parameters = ("product_min", 300,"product_max", 500, "primer_max_len", 30,"F
 #print Dumper(\%parameters);
 #exit(0);
 
-open(IN,$fasta) or die "can't open file '$fasta':$!\n";
+open(IN,$fasta) or die "can't open file '$fasta':$!\n$usage";
 
 my $seq = "";
 my $seq_ID = "";
@@ -55,25 +59,25 @@ sub generateP3Input {
   
   my @result;
   foreach my $SSR (@$SSRs) {
-    my $start = $SSR->[5] - $par->{"product_max"} + $par->{"primer_max_len"} + $SSR->[4] + 1;
+    my $start = $SSR->[5] - $par->{"product_max"} + $par->{"primer_max_len"} + $SSR->[4] + $par->{'Flank'};
     $start = 1 if $start <= 0;
-    my $end = $SSR->[6] + $par->{"product_max"} - $par->{"primer_max_len"} - $SSR->[4] + 1;
+    my $end = $SSR->[6] + $par->{"product_max"} - $par->{"primer_max_len"} - $SSR->[4] - $par->{'Flank'};
     $end = length($seq) if $end > length($seq);
 
-    my $target_left = $SSR->[5] - $par->{"Flank"} - $start;  
+    my $target_left = $SSR->[5] - $par->{"Flank"} - $start + 1;  
     next if $target_left <= 0;
     #$target_left = $SSR->[5] - $par->{"Flank"} - $start;  
 
     my $target_right = $SSR->[6] + $par->{"Flank"};
     next if $target_right >= length($seq); 
-    $target_right = $SSR->[6] + $par->{"Flank"} - $start;
+    $target_right = $SSR->[6] + $par->{"Flank"} - $start + 1;
     
     $SSR->[3] =~ s/\).+\(/\-/g;
     $SSR->[3] =~ s/\).*//g;
     $SSR->[3] =~ s/.*\(//g;
 
     print STDERR (join(",",(@$SSR,$start,$end)),"\n") if $end - $start > 2 * $par->{"product_max"} + 500;
-    push @result,"SEQUENCE_ID=".join("_",($SSR->[0],$SSR->[1],$SSR->[3],$SSR->[5],$SSR->[4]));
+    push @result,"SEQUENCE_ID=".join("_",($SSR->[0],$SSR->[1],$SSR->[3],$SSR->[5],$SSR->[4],$start));
     push @result,"SEQUENCE_TEMPLATE=" . substr($seq,$start-1,$end-$start+1);
     push @result,"SEQUENCE_TARGET=" . $target_left . "," . ($target_right - $target_left + 1);
     push @result,"PRIMER_TASK=generic";
@@ -96,7 +100,7 @@ sub generateP3Input {
 sub getMisa {
   my $misa = shift;
   
-  open(IN,$misa) or die "Can't open misa file '$misa':$!\n";
+  open(IN,$misa) or die "Can't open misa file '$misa':$!\n$usage";
   my %result;
   my $i = 0;
   while(my $txt = <IN>){
