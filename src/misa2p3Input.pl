@@ -2,6 +2,15 @@
 use strict;
 use Data::Dumper;
 
+# todo
+# 150902: more parameters from command line use opt package, include:
+#   product_min
+#   product_max
+#   primer_max_len
+#   primer_opt_len
+#   primer_min_len
+#   Flank
+
 my $fasta = shift;
 my $misa = shift;
 # misa the position was start at 1, with the 1st base having position 1
