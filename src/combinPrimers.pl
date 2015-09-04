@@ -8,25 +8,98 @@ my $primerFile = shift;
 
 my $usage = "perl $0 misa_file primerFile\n";
 
-my %misas = getMisa($misa);
+my @misas = getArraybyFile($misa);
+my @primers = getArraybyFile($primerFile);
+
+print "misa:",scalar(@misas),"\tprimers:",scalar(@primers),"\n";
+print Dumper($misas[0]);
+print Dumper($primers[0]);
 
 my $fromLeft = 50;
 my $fromRight = 50;
-open(FI,$primerFile) or die "cann't open file '$primerFile' due to:$!\n$usage";
-  while(my $txt = <FI>){
-    $txt =~ s/^\s+//;
-    $txt =~ s/\s+$//;
-    my @f = split(/\s+|_/,$txt);
-    my $left = $f[7] + $f[5];
-    my $right = $f[16] + $f[5];
-    my @misaIn = combination($f[0],$left + $fromLeft, $right - $fromRight,\%misas);
-    print STDERR scalar(@misaIn),":misaIn\n";
-    print join("\t",@f),"\t";
-    map {print join("\t",@{$_}),"\t";} @misaIn;
-    print "\n";
-    #print STDERR join("\t",($f[0],$f[1],$f[2],$f[5],$f[7],$f[16],$f[7] + $f[5] - 1, $f[16] + $f[5] - 1)),"\n";    
+
+my %misas;
+my %primers;
+for ( my $i = 0; $i < scalar(@primers); $i++) {
+
+  my @chrinfor = split(/_/,$primers[$i]->[0]);
+  my $left = $primers[$i]->[2] + $chrinfor[5] + $fromLeft;
+  my $right = $primers[$i]->[11] + $chrinfor[5] - $fromRight;
+
+  for ( my $j = 0; $j < scalar(@misas); $j++) {
+    if ($misas[$j]->[0] eq $chrinfor[0]){
+      if ($misas[$j]->[5] >= $left && $misas[$j] ->[6] <= $right) {
+        if ($primers{$i}) {
+          push @{$primers{$i}},$j;
+        }else{
+          $primers{$i} = [$j];
+        }
+        
+        if ($misas{$j}) {
+          push @{$misas{$j}}, $i;
+        }else{
+          $misas{$j} = [$i];
+        } 
+      } 
+    }
   }
-close(FI);
+
+}
+
+my %selectedPrimers;
+my $id = getMaxMisaInPrimers(\%primers);
+while(defined ($id) ) {
+  $selectedPrimers{$id} = delete($primers{$id});
+  print "$id:id\n";
+  adjustPrimers($id,$selectedPrimers{$id},\%primers,\%misas); 
+  $id = getMaxMisaInPrimers(\%primers);
+}
+
+
+print Dumper(\%primers);
+print Dumper(\%misas);
+
+sub getMaxMisaInPrimers {
+  my $primers = shift;
+  
+  my $id = "";
+  my $num = 0;
+  foreach my $k (keys %{$primers}) {
+    my $i = 0;
+
+    foreach my $v (@{$primers->{$k}}) {
+      $i++ if defined($v);
+    }
+
+    if ( $i > $num) {
+      $id = $k;
+      $num = $i;
+    }
+  }
+  
+  return undef if $num == 0;
+  return $id;
+}
+
+sub adjustPrimers {
+  my $id = shift;
+  my $selectedMisas = shift;
+  my $primers = shift;
+  my $misas = shift;
+  
+  foreach my $amisa (@$selectedMisas) {
+    my $misaPrimers = delete($misas->{$amisa});  
+    print $amisa,":misa\n";
+    print Dumper($misaPrimers);
+    foreach my $aprimer (@$misaPrimers){ 
+      next if $id == $aprimer;
+      print $aprimer,":primer\n";
+      for ( my $i = 0; $i < scalar(@{$primers->{$aprimer}}); $i++) {
+        $primers->{$aprimer}->[$i] = undef if $primers->{$aprimer}->[$i] == $amisa; 
+      }
+    }
+  }
+}
 
 sub combination{
   my $chr = shift;
@@ -42,6 +115,26 @@ sub combination{
       }
     }
   } 
+  return(@result);
+}
+
+sub getArraybyFile {
+  my $arrayFile = shift;
+
+  open(IN,$arrayFile) or die "Can't open misa file '$arrayFile':$!\n$usage";
+  my @result;
+  my $i = 0;
+  while(my $txt = <IN>){
+    $txt =~ s/^\s+//;
+    $txt =~ s/\s+$//;
+    if($txt !~ /SSR.+type.+size.+start.+end$/){
+      my @f = split(/\s+/,$txt);
+      push @result,[@f];
+      $i++;
+      print STDERR ("read SSR:" . $i . "\n") if $i % 1000 == 0;
+    }
+  }    
+  close(IN);
   return(@result);
 }
 
