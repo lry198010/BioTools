@@ -11,9 +11,9 @@ my $usage = "perl $0 misa_file primerFile\n";
 my @misas = getArraybyFile($misa);
 my @primers = getArraybyFile($primerFile);
 
-print "misa:",scalar(@misas),"\tprimers:",scalar(@primers),"\n";
-print Dumper($misas[0]);
-print Dumper($primers[0]);
+print STDERR "misa:",scalar(@misas),"\tprimers:",scalar(@primers),"\n";
+#print Dumper($misas[0]);
+#print Dumper($primers[0]);
 
 my $fromLeft = 50;
 my $fromRight = 50;
@@ -46,18 +46,36 @@ for ( my $i = 0; $i < scalar(@primers); $i++) {
 
 }
 
+
+#print STDERR Dumper(\%primers);
+
 my %selectedPrimers;
 my $id = getMaxMisaInPrimers(\%primers);
 while(defined ($id) ) {
   $selectedPrimers{$id} = delete($primers{$id});
-  print "$id:id\n";
+  print STDERR "$id:id\n";
   adjustPrimers($id,$selectedPrimers{$id},\%primers,\%misas); 
   $id = getMaxMisaInPrimers(\%primers);
 }
 
+#print STDERR Dumper(\%selectedPrimers);
 
-print Dumper(\%primers);
-print Dumper(\%misas);
+foreach my $p (keys %selectedPrimers) {
+  next unless defined $p;
+  foreach my $m (@{$selectedPrimers{$p}}) {
+    next unless defined $m;
+    #print STDERR "p:$p,m:$m\n";
+    print join("\t",(@{$misas[$m]},@{$primers[$p]})),"\n";
+  }
+}
+
+# print "primers:\n";
+# print Dumper(\%primers);
+# print "misas:\n";
+# print Dumper(\%misas);
+# print "selectPrimers:\n";
+# print Dumper(\%selectedPrimers);
+
 
 sub getMaxMisaInPrimers {
   my $primers = shift;
@@ -70,6 +88,8 @@ sub getMaxMisaInPrimers {
     foreach my $v (@{$primers->{$k}}) {
       $i++ if defined($v);
     }
+    
+    delete($primers->{$k}) if $i == 0;
 
     if ( $i > $num) {
       $id = $k;
@@ -87,15 +107,20 @@ sub adjustPrimers {
   my $primers = shift;
   my $misas = shift;
   
+  #print STDERR scalar(@$selectedMisas),":selectedmisas\n";
+  #print STDERR join(",",@$selectedMisas),"\n";
   foreach my $amisa (@$selectedMisas) {
+    next unless defined($amisa);
     my $misaPrimers = delete($misas->{$amisa});  
-    print $amisa,":misa\n";
-    print Dumper($misaPrimers);
+    #print $amisa,":misa\n";
+    #print Dumper($misaPrimers);
     foreach my $aprimer (@$misaPrimers){ 
       next if $id == $aprimer;
-      print $aprimer,":primer\n";
+      #print $aprimer,":primer\n";
+      #print "scalar aprimers contain misa:",scalar(@{$primers->{$aprimer}}),"\n";
+      #print Dumper($primers->{$aprimer});
       for ( my $i = 0; $i < scalar(@{$primers->{$aprimer}}); $i++) {
-        $primers->{$aprimer}->[$i] = undef if $primers->{$aprimer}->[$i] == $amisa; 
+        $primers->{$aprimer}->[$i] = undef if ( defined ($primers->{$aprimer}->[$i]) && ($primers->{$aprimer}->[$i] == $amisa)); 
       }
     }
   }
