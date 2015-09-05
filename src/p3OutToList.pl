@@ -2,9 +2,11 @@
 use strict;
 use Data::Dumper;
 
+my $usage = "perl $0 p3out_file\n";
+
 my $p3Out = shift;
 
-open(IN,$p3Out) or die "Cann't open primer3 out file '$p3Out' due to:$!\n";
+open(IN,$p3Out) or die "Cann't open primer3 out file '$p3Out' due to:$!\n$usage";
   my $primerName = "";
   my @result;
   my $tmp = "";
@@ -39,26 +41,3 @@ close(IN);
 
 print join("\n",@result);
 
-sub getMisa {
-  my $misa = shift;
-  
-  open(IN,$misa) or die "Can't open misa file '$misa':$!\n$usage";
-  my %result;
-  my $i = 0;
-  while(my $txt = <IN>){
-    $txt =~ s/^\s+//;
-    $txt =~ s/\s+$//;
-    if($txt !~ /SSR.+type.+size.+start.+end$/){
-      my @f = split(/\s+/,$txt);
-      if($result{$f[0]}){
-        push $result{$f[0]},[@f];
-      }else{
-        $result{$f[0]} = [[@f]];
-      }
-      $i++;
-      print STDERR ("read SSR:" . $i . "\n") if $i % 1000 == 0;
-    }
-  }    
-  close(IN);
-  return(%result);
-}

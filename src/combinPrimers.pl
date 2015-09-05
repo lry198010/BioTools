@@ -11,7 +11,7 @@ my $usage = "perl $0 misa_file primerFile\n";
 my @misas = getArraybyFile($misa);
 my @primers = getArraybyFile($primerFile);
 
-print STDERR "misa:",scalar(@misas),"\tprimers:",scalar(@primers),"\n";
+print STDERR "misa (targets):",scalar(@misas),"\tprimers pairs:",scalar(@primers),"\n";
 #print Dumper($misas[0]);
 #print Dumper($primers[0]);
 
@@ -58,7 +58,7 @@ while(defined ($id) ) {
   $id = getMaxMisaInPrimers(\%primers);
 }
 
-#print STDERR Dumper(\%selectedPrimers);
+# print STDERR Dumper(\%selectedPrimers);
 
 foreach my $p (keys %selectedPrimers) {
   next unless defined $p;
@@ -82,6 +82,7 @@ sub getMaxMisaInPrimers {
   
   my $id = "";
   my $num = 0;
+  my @ids;
   foreach my $k (keys %{$primers}) {
     my $i = 0;
 
@@ -94,10 +95,16 @@ sub getMaxMisaInPrimers {
     if ( $i > $num) {
       $id = $k;
       $num = $i;
+      @ids = ($k);
+    }elsif ($i == $num) {
+      push @ids,$k;
     }
   }
   
   return undef if $num == 0;
+  #print STDERR join(",",@ids),"\n";
+  #print STDERR join(",",(sort {$a<=>$b;} @ids)),"\n";
+  ($id) = sort {$a<=>$b;} @ids;
   return $id;
 }
 
