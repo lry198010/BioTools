@@ -5,15 +5,19 @@ use Data::Dumper;
 # primer3 use 0-based position
 my $misa = shift;
 my $primerFile = shift;
+my $primers2Considered = shift;
 
-my $usage = "perl $0 misa_file primerFile\n";
+my $usage = "perl $0 misa_file primerFile primers2Considered[5]\n";
+
+$primers2Considered =  5 if !(defined($primers2Considered)) || $primers2Considered !~ /^\d+$/ || $primers2Considered < 1;
 
 my @misas = getArraybyFile($misa);
-my @primers = getArraybyFile($primerFile);
+my @primers = getArraybyFile($primerFile,$primers2Considered);
 
 print STDERR "misa (targets):",scalar(@misas),"\tprimers pairs:",scalar(@primers),"\n";
-#print Dumper($misas[0]);
-#print Dumper($primers[0]);
+#print Dumper(@misas);
+#print Dumper(@primers);
+#exit(0);
 
 my $fromLeft = 50;
 my $fromRight = 50;
@@ -152,18 +156,31 @@ sub combination{
 
 sub getArraybyFile {
   my $arrayFile = shift;
+  my $num2Get = shift; # max number of arrays return, the array all have the same title  
 
+  $num2Get = 100000000 if !(defined($num2Get)) || $num2Get !~ /^\d+$/ || $num2Get < 1;
+  #print STDERR $num2Get,":num2get\n";
   open(IN,$arrayFile) or die "Can't open misa file '$arrayFile':$!\n$usage";
+  print STDERR "Begin read data from:$arrayFile\n";
   my @result;
   my $i = 0;
+  my $name = "";
+  my $numGetted = 0;
   while(my $txt = <IN>){
     $txt =~ s/^\s+//;
     $txt =~ s/\s+$//;
     if($txt !~ /SSR.+type.+size.+start.+end$/){
       my @f = split(/\s+/,$txt);
-      push @result,[@f];
       $i++;
-      print STDERR ("read SSR:" . $i . "\n") if $i % 1000 == 0;
+      print STDERR ("read Arrays:" . $i . "\n") if $i % 1000 == 0;
+      if ( $f[0] ne $name ) {
+        $numGetted = 0;
+        $name = $f[0];
+      }
+      if ($numGetted < $num2Get) {
+        push @result,[@f];
+        $numGetted++;
+      }
     }
   }    
   close(IN);
