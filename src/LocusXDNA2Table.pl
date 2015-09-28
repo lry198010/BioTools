@@ -47,7 +47,11 @@ print STDERR "Number of samples:",scalar(@call),"\n";
 print STDERR "Number of locus:", scalar(@{$call[0]}),"\n";
 
 my @generalKey = keys %generalInfo;
-print join(",",@generalKey),",";
+my $header = join(",",@generalKey);
+$header =~ s/^,+//;
+$header =~ s/,+/,/g;
+$header =~ s/,+$//;
+print $header,",";
 for (my $i = 0; $i < @call; $i++) {
   print $call[$i]->[0],"_g,";
 }
