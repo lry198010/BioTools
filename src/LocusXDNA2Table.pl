@@ -46,7 +46,14 @@ foreach my $k (keys %generalInfo){
 print STDERR "Number of samples:",scalar(@call),"\n"; 
 print STDERR "Number of locus:", scalar(@{$call[0]}),"\n";
 
-my @generalKey = keys %generalInfo;
+my @infoOrder = (",Gentrain","ilmnIds","ilmnStrand","locusIds","locusNames","olicodeNames","snps","plusMinusStrand","locus,");
+my @generalKey;
+foreach my $k (@infoOrder){
+  foreach my $s (keys %generalInfo) {
+    push @generalKey,$k if $k eq $s;
+  }
+}
+
 my $header = join(",",@generalKey);
 $header =~ s/^,+//;
 $header =~ s/,+/,/g;
@@ -57,7 +64,7 @@ for (my $i = 0; $i < @call; $i++) {
 }
 
 for (my $i = 0; $i < @score; $i++) {
-  print $score[$i]->[0],"_s,";
+  #print $score[$i]->[0],"_s,";
 }
 print "\n";
 
@@ -65,12 +72,37 @@ for (my $i = 0; $i < scalar(@{$generalInfo{$generalKey[0]}}); $i++){
   foreach my $k (@generalKey) {
     print $generalInfo{$k}->[$i],",";
   }
+  
+  my $ilmnStrand = $generalInfo{"ilmnStrand"} -> [$i];
+  my $snp = $generalInfo{"snps"} -> [$i];
+  
+  my $A;
+  my $B;
+  if ($snp =~ /A|T/i && $snp =~ /C|G/) {
+     if ($snp =~ /(A|T)/) {
+       $A = $1; 
+     }
+     if ($snp =~ /(C|G)/i) {
+       $B = $1;
+     }
+  } else {
+    my @s = split(/\//,$snp);
+    if ($ilmnStrand eq "T") {
+      ($A,$B)=@s;
+    } else {
+      ($B,$A)=@s;
+    }
+  }
+  my %geno = ("A" => $A.$A, "H" => $A.$B, "B" => $B.$B, "U" => "--");
+  #print STDERR "Strand:$ilmnStrand\tsnp:$snp\tA:$A\tB:$B\n";
+  
   for (my $j = 0; $j < @call; $j ++) {
-    print $call[$j]->[$i+1],",";
+    #print $call[$j]->[$i+1],$geno{$call[$j]->[$i+1]},",";
+    print $geno{$call[$j]->[$i+1]},",";
   } 
 
   for (my $j = 0; $j < @score; $j ++) {
-    print $score[$j]->[$i+1],",";
+    #print $score[$j]->[$i+1],",";
   } 
   print "\n";
 }
