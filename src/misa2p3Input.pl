@@ -16,14 +16,20 @@ my $misa = shift;
 # misa the position was start at 1, with the 1st base having position 1
 # vcf the position of the ref was at 1, with the 1st base having position 1 
 
+my $product_min = shift;
+my $product_max = shift;
+my $primer_min = shift;
+my $primer_max = shift;
+my $Flank_l = shift;
+my $Flank_r = shift;
 my $usage = "Usage: perl $0 fasta_file misa_file\n";
 
 my %SSR = getMisa($misa);
 
-foreach my $scaf  (keys %SSR){
+#foreach my $scaf  (keys %SSR){
   #print($scaf . ":" . scalar(@{$SSR{$scaf}}) . "\n");
   #print($scaf,"\n");
-}
+#}
 
 my %parameters = ("product_min", 300,"product_max", 500, "primer_max_len", 30,"Flank",70);
 #print Dumper(\%parameters);
