@@ -62,13 +62,12 @@ print STDERR "Parameters:\n";
 print STDERR "minimum product size:$product_min\n";
 print STDERR "maximam product size:$product_max\n";
 print STDERR "minimum primer length:$primer_min\n";
-print STDERR "optimum primer length:$primer_min\n";
+print STDERR "optimum primer length:$primer_opt\n";
 print STDERR "maximal primer length:$primer_max\n";
 print STDERR "left flank length:$flank_l\n";
 print STDERR "right flank length:$flank_r\n";
 
 my $usage = "Usage: perl $0 fasta_file misa_file product_min product_max primer_min primer_opt primer_max flank_left flank_right\n";
-print  $usage;
 
 my %SSR = getMisa($misa);
 
@@ -147,7 +146,7 @@ sub generateP3Input {
     push @result,"PRIMER_PICK_RIGHT_PRIMER=1";
     push @result,"PRIMER_OPT_SIZE=" . $par->{"primer_opt_len"};
     push @result,"PRIMER_MIN_SIZE=" . $par->{"primer_min_len"};
-    push @result,"PRIMER_MAX_SIZE=" . $par->{"primer_min_len"};
+    push @result,"PRIMER_MAX_SIZE=" . $par->{"primer_max_len"};
     push @result,"PRIMER_MAX_NS_ACCEPTED=0";
     push @result,"PRIMER_PRODUCT_SIZE_RANGE=" . $par->{"product_min"} . "-" . $par->{"product_max"}; 
     push @result,"P3_FILE_FLAG=0";
