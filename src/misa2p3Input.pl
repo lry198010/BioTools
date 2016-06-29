@@ -25,7 +25,7 @@ foreach my $scaf  (keys %SSR){
   #print($scaf,"\n");
 }
 
-my %parameters = ("product_min", 300,"product_max", 500, "primer_max_len", 30,"Flank",70);
+my %parameters = ("product_min", 500,"product_max", 1000, "primer_max_len", 30,"Flank",200);
 #print Dumper(\%parameters);
 #exit(0);
 
