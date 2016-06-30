@@ -90,22 +90,46 @@ close(FI);
 # my @len = values %seq;
 my @len = map {$_ ->[0];} values %seq;
 (undef,$As, $Ts, $Gs, $Cs, $Ns) = baseCountByHash(%seq);
-print STDERR join(",",($As, $Ts, $Gs, $Cs, $Ns)),"\n";
-my $transcript_stat = printStat(@len);
+my $transcript_stat = printStat([$As, $Ts, $Gs, $Cs, $Ns],@len);
 print $transcript_stat,"\n";
-print STDERR "Finished N50 Statisitcs output to file: $statFile\n";
+print STDERR "Transcripts: Statisitcs output to file: $statFile\n";
 
 my $groups = getGroupRange(0,1500,100);
 my %groupCounts = printSeqLenGroup($groups,@len);
-print STDERR Dumper(\%groupCounts);
+foreach my $g (sort {$a<=>$b} keys %groupCounts) {
+  print "[", join("):",@{$groupCounts{$g}}),"\n";
+}
+print STDERR "Transcripts: Groups output to file: $statFile\n";
 
-printSeqLen($distFile,%seq);
-print STDERR "Finished sequence length  output to file: $distFile\n";
+printSeqLen($distFile,{"minLen"=>$minLen,"fields"=>[0,1,2,3,4,5]},%seq);
+print STDERR "Transcripts: Sequence length output to file: $distFile\n";
+
+my %trinityGenes = TrinityGene(%seq);
+@len = map {$_ ->[0];} values %trinityGenes;
+(undef,$As, $Ts, $Gs, $Cs, $Ns) = baseCountByHash(%trinityGenes);
+my $trinityGenes_stat = printStat([$As, $Ts, $Gs, $Cs, $Ns],@len);
+print $trinityGenes_stat,"\n";
+print STDERR "Trinity Genes: Statisitcs output to file: $statFile\n";
+
+
+$groups = getGroupRange(0,1500,100);
+%groupCounts = printSeqLenGroup($groups,@len);
+foreach my $g (sort {$a<=>$b} keys %groupCounts) {
+  print "[", join("):",@{$groupCounts{$g}}),"\n";
+}
+print STDERR "Trinity Genes: Groups output to file: $statFile\n";
+
+
+printSeqLen($distFile,{"minLen"=>$minLen,"fields"=>[0,1,2,3,4,5,6,7,8]},%trinityGenes);
+print STDERR "Transcripts: Sequence length output to file: $distFile\n";
+
 print STDERR "ok finished\n";
 
 sub printStat {
+  my $ATGCN = shift;
   my @len = @_; 
 
+  my ($As, $Ts, $Gs, $Cs, $Ns) = @$ATGCN;
   my $totalReads = scalar @len;
   my $bases = sum(@len);
   my $minReadLen = min(@len);
@@ -153,13 +177,13 @@ sub printSeqLenGroup {
   
   my %groupCounts;
   foreach my $g (@$groupRange) {
-    $groupCounts{join(",",@$g)} = 0;
+    $groupCounts{$g->[0]} = [join(",",@$g),0];
   }
 
   foreach my $l (@len){
     foreach my $g (@$groupRange){
       if(($l >= $g->[0]) && ($l < $g->[1])){
-         $groupCounts{join(",",@$g)}++;
+         $groupCounts{$g->[0]}->[1]++;
          last;
       }
     }
@@ -183,16 +207,82 @@ sub getGroupRange {
 
 sub printSeqLen {
   my $toFile = shift;
-  my @seq = @_;
+  my $options = shift;
+  my %seq = @_;
   
-  print $toFile,"\n";
+  my $sep = "\t";
+  
+  my $minLen = "null";
+  $minLen = $options->{"minLen"};
 
   open(O, ">$toFile") or die "Can not open file: $toFile\n";
-  print O "#only length >= $minLen used\n\n";
-  foreach my $k (keys %seq){
-    print O "$k\t$seq{$k}->[0]\n";
-  }
+    print O "#only length >= $minLen used\n\n";
+    foreach my $k (keys %seq){
+      my @fields = ($k);
+      foreach my $f (@{$options->{"fields"}}) {
+        if (ref($seq{$k}->[$f]) eq "ARRAY") {
+          push @fields,@{$seq{$k}->[$f]}; 
+        }else{
+          push @fields,$seq{$k}->[$f]; 
+        }
+      }
+      print O join($sep,@fields),"\n";
+    }
   close(O);
+}
+
+# T01_DN5152_c0_g1_i1
+#   0    1    2    3    4    5
+# ($Bs, $As, $Ts, $Gs, $Cs, $Ns)
+sub TrinityGene {
+  my %seq = @_;
+  
+  my %genes; 
+  foreach my $seqId (keys %seq){
+    my $geneId = $seqId;
+    if ($seqId =~ /(.*)_i\d+$/){
+      $geneId = $1;
+    }
+    if (defined $genes{$geneId}) {
+      if ($genes{$geneId}->[0] < $seq{$seqId}->[0]) {
+        $genes{$geneId}->[0] = $seq{$seqId}->[0];
+        $genes{$geneId}->[1] = $seq{$seqId}->[1];
+        $genes{$geneId}->[2] = $seq{$seqId}->[2];
+        $genes{$geneId}->[3] = $seq{$seqId}->[3];
+        $genes{$geneId}->[4] = $seq{$seqId}->[4];
+        $genes{$geneId}->[5] = $seq{$seqId}->[5];
+        $genes{$geneId}->[7] = $seqId;
+      }
+      $genes{$geneId}->[6]++;
+      $genes{$geneId}->[8]->[0] += $seq{$seqId}->[0];
+      $genes{$geneId}->[8]->[1] += $seq{$seqId}->[1];
+      $genes{$geneId}->[8]->[2] += $seq{$seqId}->[2];
+      $genes{$geneId}->[8]->[3] += $seq{$seqId}->[3];
+      $genes{$geneId}->[8]->[4] += $seq{$seqId}->[4];
+      $genes{$geneId}->[8]->[5] += $seq{$seqId}->[5];
+    }else{
+      $genes{$geneId}->[0] = $seq{$seqId}->[0];
+      $genes{$geneId}->[1] = $seq{$seqId}->[1];
+      $genes{$geneId}->[2] = $seq{$seqId}->[2];
+      $genes{$geneId}->[3] = $seq{$seqId}->[3];
+      $genes{$geneId}->[4] = $seq{$seqId}->[4];
+      $genes{$geneId}->[5] = $seq{$seqId}->[5];
+      $genes{$geneId}->[6] = 1;
+      $genes{$geneId}->[7] = $seqId;
+      $genes{$geneId}->[8] = [@{$seq{$seqId}}];
+    }
+  } 
+  
+  return %genes;
+}
+
+sub ClusterGene {
+  my $clusterFile = shift;
+  my %seq = @_;
+  
+  open(IN,$clusterFile) or die "cann't open cluster file '$clusterFile':$!\n";
+    
+  close(IN);
 }
 
 sub calcN50 {
