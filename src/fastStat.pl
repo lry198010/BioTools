@@ -85,14 +85,18 @@ close(FI);
 my @len = map {$_ ->[0];} values %seq;
 (undef,$As, $Ts, $Gs, $Cs, $Ns) = baseCountByHash(%seq);
 my $transcript_stat = printStat([$As, $Ts, $Gs, $Cs, $Ns],@len);
-print $transcript_stat,"\n";
+open(OUT,">$fileBase.trans.stat") or die "Cann't open trans.stat file '$fileBase.trans.stat':$!\n";
+  print OUT $transcript_stat,"\n";
+close(OUT);
 print STDERR "Transcripts: Statisitcs output to file: $fileBase.trans.stat\n";
 
 my $groups = getGroupRange(0,1500,100);
 my %groupCounts = printSeqLenGroup($groups,@len);
-foreach my $g (sort {$a<=>$b} keys %groupCounts) {
-  print "[", join("):",@{$groupCounts{$g}}),"\n";
-}
+open(OUT,">$fileBase.trans.groups") or die "Cann't open trans.groups file '$fileBase.trans.groups':$!\n";
+  foreach my $g (sort {$a<=>$b} keys %groupCounts) {
+    print OUT "[", join("):",@{$groupCounts{$g}}),"\n";
+  }
+close(OUT);
 print STDERR "Transcripts: Groups output to file: $fileBase.trans.groups\n";
 
 printSeqLen($fileBase . ".trans.len",{"minLen"=>$minLen,"fields"=>[0,1,2,3,4,5]},%seq);
@@ -103,18 +107,22 @@ my %trinityGenes = TrinityGene(%seq);
 @len = map {$_ ->[0];} values %trinityGenes;
 (undef,$As, $Ts, $Gs, $Cs, $Ns) = baseCountByHash(%trinityGenes);
 my $trinityGenes_stat = printStat([$As, $Ts, $Gs, $Cs, $Ns],@len);
-print $trinityGenes_stat,"\n";
+open(OUT,">$fileBase.trigene.stat") or die "Cann't open trigene.stat file '$fileBase.trigene.stat':$!\n";
+  print OUT $trinityGenes_stat,"\n";
+close(OUT);
 print STDERR "Trinity Genes: Statisitcs output to file: $fileBase.trigene.stat\n";
 
 
 $groups = getGroupRange(0,1500,100);
 %groupCounts = printSeqLenGroup($groups,@len);
+open(OUT,">$fileBase.trigene.groups") or die "Cann't open trigene.groups file '$fileBase.trigene.groups':$!\n";
 foreach my $g (sort {$a<=>$b} keys %groupCounts) {
-  print "[", join("):",@{$groupCounts{$g}}),"\n";
+  print OUT "[", join("):",@{$groupCounts{$g}}),"\n";
 }
+close(OUT);
 print STDERR "Trinity Genes: Groups output to file: $fileBase.trigene.groups\n";
 
-printSeqLen($fileBase . "trigene.len",{"minLen"=>$minLen,"fields"=>[0,1,2,3,4,5,6,7,8]},%trinityGenes);
+printSeqLen($fileBase . ".trigene.len",{"minLen"=>$minLen,"fields"=>[0,1,2,3,4,5,6,7,8]},%trinityGenes);
 print STDERR "Trinity Genes: Sequence length output to file: $fileBase.trigene.len\n";
 
 %trinityGenes = genes2trans("Trinity genes",%trinityGenes);
@@ -133,17 +141,22 @@ my %corsetGenes = corsetGenes($cluster,%seq);
 @len = map {$_ ->[0];} values %corsetGenes;
 (undef,$As, $Ts, $Gs, $Cs, $Ns) = baseCountByHash(%corsetGenes);
 my $corsetGenes_stat = printStat([$As, $Ts, $Gs, $Cs, $Ns],@len);
-print $corsetGenes_stat,"\n";
+open(OUT,">$fileBase.corgene.stat") or die "Cann't open corgene.stat file '$fileBase.corgene.stat':$!\n";
+print OUT $corsetGenes_stat,"\n";
+close(OUT);
 print STDERR "Corset Genes[Unigenes]: Statisitcs output to file: $fileBase.corgene.stat\n";
 
 
+$groups = getGroupRange(0,1500,100);
 %groupCounts = printSeqLenGroup($groups,@len);
+open(OUT,">$fileBase.corgene.groups") or die "Cann't open corgene.groups file '$fileBase.corgene.groups':$!\n";
 foreach my $g (sort {$a<=>$b} keys %groupCounts) {
-  print "[", join("):",@{$groupCounts{$g}}),"\n";
+  print OUT "[", join("):",@{$groupCounts{$g}}),"\n";
 }
+close(OUT);
 print STDERR "Corset Genes[Unigenes]: Groups output to file: $fileBase.corgene.groups\n";
 
-printSeqLen($fileBase . "corgene.len",{"minLen"=>$minLen,"fields"=>[0,1,2,3,4,5,6,7,8]},%corsetGenes);
+printSeqLen($fileBase . ".corgene.len",{"minLen"=>$minLen,"fields"=>[0,1,2,3,4,5,6,7,8]},%corsetGenes);
 print STDERR "Trinity Genes: Sequence length output to file: $fileBase.corgene.len\n";
 
 
@@ -151,6 +164,9 @@ print STDERR "Trinity Genes: Sequence length output to file: $fileBase.corgene.l
 
 print STDERR "Trinity Genes: Sequence output to file: $fileBase.trigene.fa\n";
 print STDERR "Trinity Genes: Sequence output to file: $fileBase.corgene.fa\n";
+
+open(TRIOUT,">$fileBase.trigene.fa") or die "Cann't open trigene.fa '$fileBase.trigene.fa':$!\n";
+open(COROUT,">$fileBase.corgene.fa") or die "Cann't open trigene.fa '$fileBase.trigene.fa':$!\n";
 
 open(FI,$fasta) or die "Cann't open '$fasta' due to:$!\n";
 
@@ -163,12 +179,12 @@ while(my $txt = <FI>){
     $txt =~ s/\s+$//; 
     if($txt =~ /^>(\S+)/){
       if (defined $trinityGenes{$nowSeqId}){
-        print ">",$trinityGenes{$nowSeqId}," $nowSeqId $seqDesc\n";
-        print $seq,"\n";
+        print TRIOUT ">",$trinityGenes{$nowSeqId}," $nowSeqId $seqDesc\n";
+        print TRIOUT $seq,"\n";
       }
       if (defined $corsetGenes{$nowSeqId}){
-        print ">",$corsetGenes{$nowSeqId}," $nowSeqId $seqDesc\n";
-        print $seq,"\n";
+        print COROUT ">",$corsetGenes{$nowSeqId}," $nowSeqId $seqDesc\n";
+        print COROUT $seq,"\n";
       }
       $seq = "";
       $nowSeqId = $1;      
@@ -182,13 +198,17 @@ while(my $txt = <FI>){
 }
 
 if (defined $trinityGenes{$nowSeqId}){
-   print ">",$trinityGenes{$nowSeqId}," $nowSeqId $seqDesc\n";
-   print $seq,"\n";
+   print TRIOUT ">",$trinityGenes{$nowSeqId}," $nowSeqId $seqDesc\n";
+   print TRIOUT $seq,"\n";
 }
 if (defined $corsetGenes{$nowSeqId}){
-   print ">",$corsetGenes{$nowSeqId}," $nowSeqId $seqDesc\n";
-   print $seq,"\n";
+   print COROUT ">",$corsetGenes{$nowSeqId}," $nowSeqId $seqDesc\n";
+   print COROUT $seq,"\n";
 }
+
+close(TRIOUT);
+close(COROUT);
+close(FI);
 
 print STDERR "ok finished\n";
 
