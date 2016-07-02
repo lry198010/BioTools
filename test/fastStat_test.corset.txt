@@ -1,0 +1,13 @@
+T01_DN5152_c0_g1_i1	cluster0.0
+T01_DN5152_c0_g1_i2	cluster0.0
+T01_DN5160_c0_g1_i1	cluster1.0
+T01_DN5160_c0_g2_i1	cluster1.0
+T01_DN5193_c0_g1_i1	cluster1.0
+T01_DN5193_c1_g1_i1	cluster2.0
+T01_DN5168_c0_g1_i1	cluster2.0
+T01_DN5199_c0_g1_i1	cluster3.0
+T01_DN5119_c0_g1_i1	cluster4.0
+T01_DN5163_c0_g1_i1	cluster4.0
+T01_DN5108_c0_g1_i1	cluster4.0
+T01_DN5151_c0_g1_i1	cluster4.1
+T01_DN5121_c0_g1_i1	cluster4.1
