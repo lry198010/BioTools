@@ -76,7 +76,11 @@ my %SSR = getMisa($misa);
   #print($scaf,"\n");
 #}
 
+<<<<<<< HEAD
+my %parameters = ("product_min", 500,"product_max", 1000, "primer_max_len", 30,"Flank",200);
+=======
 my %parameters = ("product_min", $product_min,"product_max", $product_max, "primer_min_len", $primer_min, "primer_opt_len", $primer_opt, "primer_max_len", $primer_max, "flank_left", $flank_l, "flank_right", $flank_r,"Flank",70);
+>>>>>>> 03f69a5241facc7558f89c05beb3c6d5f876a61f
 #print Dumper(\%parameters);
 #exit(0);
 
